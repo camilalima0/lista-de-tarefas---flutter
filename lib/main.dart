@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 
-// --- ENUMS ---
+// --- ENUMS (Mantidos igual) ---
 enum Prioridade {
   baixa,
   media,
@@ -18,14 +18,15 @@ enum Prioridade {
     }
   }
 
+  // Ajustei as cores para combinar melhor com o tema laranja
   Color get color {
     switch (this) {
       case Prioridade.baixa:
         return Colors.green;
       case Prioridade.media:
-        return Colors.orange;
+        return Colors.amber; // Amber combina mais com Laranja
       case Prioridade.alta:
-        return Colors.red;
+        return Colors.redAccent;
     }
   }
 }
@@ -47,6 +48,46 @@ enum TipoTarefa {
   }
 }
 
+// --- DEFINIÇÃO DO TEMA ENERGÉTICO ---
+final ThemeData temaEnergetico = ThemeData(
+  useMaterial3: true,
+  // Define a base de cores
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: Colors.orange, // Cor Primária base
+    primary: Colors.orange,
+    secondary: Colors.deepOrange, // Cor Secundária (Botões de ação, destaque)
+    brightness: Brightness.light,
+  ),
+
+  // Customiza a barra superior
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Colors.orange,
+    foregroundColor: Colors.white, // Cor do texto/ícones na barra
+    centerTitle: true,
+    elevation: 4, // Sombra leve
+  ),
+
+  // Customiza o botão flutuante (+)
+  floatingActionButtonTheme: const FloatingActionButtonThemeData(
+    backgroundColor: Colors.deepOrange,
+    foregroundColor: Colors.white,
+  ),
+
+  // Customiza os Cards da lista
+  cardTheme: CardThemeData(
+    color: Colors.orange[50], // Um laranja bem clarinho no fundo do card
+    elevation: 2,
+  ),
+
+  // Customiza os botões de Salvar/Atualizar
+  elevatedButtonTheme: ElevatedButtonThemeData(
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.deepOrange,
+      foregroundColor: Colors.white,
+    ),
+  ),
+);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
@@ -60,7 +101,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Lista de Tarefas',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+
+      // AQUI APLICAMOS O SEU TEMA NOVO:
+      theme: temaEnergetico,
+
       home: const TelaTarefa(),
     );
   }
@@ -74,12 +118,10 @@ class TelaTarefa extends StatefulWidget {
 }
 
 class _TelaTarefaState extends State<TelaTarefa> {
-  // Controllers
   final TextEditingController _tituloController = TextEditingController();
   final TextEditingController _descricaoController = TextEditingController();
   final TextEditingController _prazoController = TextEditingController();
 
-  // Variáveis de Estado (Valores Padrão)
   Prioridade _prioridadeSelecionada = Prioridade.baixa;
   TipoTarefa _tipoSelecionado = TipoTarefa.pessoal;
 
@@ -92,7 +134,6 @@ class _TelaTarefaState extends State<TelaTarefa> {
   }
 
   // --- BANCO DE DADOS ---
-
   void _atualizarListaTarefas() async {
     final dbHelper = DatabaseHelper();
     final dados = await dbHelper.queryAllRows();
@@ -101,7 +142,6 @@ class _TelaTarefaState extends State<TelaTarefa> {
     });
   }
 
-  // Agora esta função serve para SALVAR (Criar) ou ATUALIZAR (Editar)
   void _salvarOuAtualizarTarefa({int? id}) async {
     if (_tituloController.text.isEmpty) return;
 
@@ -117,21 +157,16 @@ class _TelaTarefaState extends State<TelaTarefa> {
     };
 
     if (id == null) {
-      // Se não tem ID, é CRIAÇÃO (Insert)
       await dbHelper.insert(dadosTarefa);
     } else {
-      // Se tem ID, é ATUALIZAÇÃO (Update)
-      // Precisamos adicionar o ID no map para o WHERE do banco funcionar
       dadosTarefa['idTarefa'] = id;
       await dbHelper.update(dadosTarefa);
     }
 
-    // Limpa campos
     _tituloController.clear();
     _descricaoController.clear();
     _prazoController.clear();
 
-    // Reseta Enums
     setState(() {
       _prioridadeSelecionada = Prioridade.baixa;
       _tipoSelecionado = TipoTarefa.pessoal;
@@ -139,9 +174,7 @@ class _TelaTarefaState extends State<TelaTarefa> {
 
     _atualizarListaTarefas();
 
-    if (mounted) {
-      FocusScope.of(context).unfocus();
-    }
+    if (mounted) FocusScope.of(context).unfocus();
   }
 
   void _deletarTarefa(int id) async {
@@ -156,24 +189,33 @@ class _TelaTarefaState extends State<TelaTarefa> {
   }
 
   // --- TELA ---
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minhas Tarefas'),
-        centerTitle: true,
-        backgroundColor: Colors.blue[100],
+        // Removi o backgroundColor hardcoded daqui para ele pegar do tema
       ),
       body: _listaTarefas.isEmpty
-          ? const Center(child: Text('Nenhuma tarefa cadastrada.'))
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.list_alt, size: 80, color: Colors.orange[200]),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Nenhuma tarefa ainda.\nVamos produzir!',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
           : ListView.builder(
               padding: const EdgeInsets.all(8),
               itemCount: _listaTarefas.length,
               itemBuilder: (context, index) {
                 final item = _listaTarefas[index];
 
-                // Conversão segura de String para Enum
                 Prioridade prioridadeObj;
                 try {
                   prioridadeObj = Prioridade.values.byName(
@@ -191,13 +233,10 @@ class _TelaTarefaState extends State<TelaTarefa> {
                 }
 
                 return Card(
-                  elevation: 2,
-                  margin: const EdgeInsets.symmetric(vertical: 5),
+                  // O Card agora pega a cor laranja clarinho do tema automaticamente
                   child: ListTile(
-                    // AQUI: Ao clicar no item, abre o modo de EDICÃO
-                    onTap: () {
-                      _mostrarFormulario(context, tarefaParaEditar: item);
-                    },
+                    onTap: () =>
+                        _mostrarFormulario(context, tarefaParaEditar: item),
                     leading: CircleAvatar(
                       backgroundColor: prioridadeObj.color,
                       child: const Icon(
@@ -219,15 +258,15 @@ class _TelaTarefaState extends State<TelaTarefa> {
                         if (item['descricaoTarefa'] != "")
                           Text(
                             item['descricaoTarefa'],
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey,
+                              color: Colors.grey[800],
                             ),
                           ),
                       ],
                     ),
                     trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.redAccent),
+                      icon: const Icon(Icons.delete, color: Colors.deepOrange),
                       onPressed: () => _deletarTarefa(item['idTarefa']),
                     ),
                   ),
@@ -235,25 +274,21 @@ class _TelaTarefaState extends State<TelaTarefa> {
               },
             ),
       floatingActionButton: FloatingActionButton(
-        // Ao clicar no +, chamamos o formulário SEM tarefa (modo criação)
         onPressed: () => _mostrarFormulario(context, tarefaParaEditar: null),
         child: const Icon(Icons.add),
+        // A cor deepOrange vem do tema
       ),
     );
   }
 
-  // O parâmetro 'tarefaParaEditar' é opcional (?)
   void _mostrarFormulario(
     BuildContext context, {
     Map<String, dynamic>? tarefaParaEditar,
   }) {
-    // LÓGICA DE PREENCHIMENTO AUTOMÁTICO
     if (tarefaParaEditar != null) {
-      // Modo Edição: Preenche os campos com os dados existentes
       _tituloController.text = tarefaParaEditar['tituloTarefa'];
       _descricaoController.text = tarefaParaEditar['descricaoTarefa'];
       _prazoController.text = tarefaParaEditar['prazoTarefa'];
-
       try {
         _prioridadeSelecionada = Prioridade.values.byName(
           tarefaParaEditar['prioridadeTarefa'],
@@ -261,11 +296,8 @@ class _TelaTarefaState extends State<TelaTarefa> {
         _tipoSelecionado = TipoTarefa.values.byName(
           tarefaParaEditar['tipoTarefa'],
         );
-      } catch (e) {
-        // Se der erro na conversão, mantém o padrão
-      }
+      } catch (e) {}
     } else {
-      // Modo Criação: Limpa tudo
       _tituloController.clear();
       _descricaoController.clear();
       _prazoController.clear();
@@ -279,9 +311,11 @@ class _TelaTarefaState extends State<TelaTarefa> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              // Muda o título dependendo do modo
               title: Text(
                 tarefaParaEditar == null ? 'Nova Tarefa' : 'Editar Tarefa',
+                style: const TextStyle(
+                  color: Colors.deepOrange,
+                ), // Destaque no título
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -289,28 +323,44 @@ class _TelaTarefaState extends State<TelaTarefa> {
                   children: [
                     TextField(
                       controller: _tituloController,
-                      decoration: const InputDecoration(labelText: 'Título'),
+                      decoration: const InputDecoration(
+                        labelText: 'Título',
+                        border: OutlineInputBorder(),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                            color: Colors.deepOrange,
+                            width: 2,
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     TextField(
                       controller: _descricaoController,
-                      decoration: const InputDecoration(labelText: 'Descrição'),
+                      decoration: const InputDecoration(
+                        labelText: 'Descrição',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     TextField(
                       controller: _prazoController,
                       decoration: const InputDecoration(
                         labelText: 'Prazo',
-                        suffixIcon: Icon(Icons.calendar_today),
+                        suffixIcon: Icon(
+                          Icons.calendar_today,
+                          color: Colors.orange,
+                        ),
+                        border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 10),
 
-                    // Dropdown Prioridade
                     DropdownButtonFormField<Prioridade>(
                       value: _prioridadeSelecionada,
                       decoration: const InputDecoration(
                         labelText: 'Prioridade',
+                        border: OutlineInputBorder(),
                       ),
                       items: Prioridade.values.map((Prioridade p) {
                         return DropdownMenuItem(value: p, child: Text(p.label));
@@ -322,10 +372,12 @@ class _TelaTarefaState extends State<TelaTarefa> {
 
                     const SizedBox(height: 10),
 
-                    // Dropdown Tipo
                     DropdownButtonFormField<TipoTarefa>(
                       value: _tipoSelecionado,
-                      decoration: const InputDecoration(labelText: 'Tipo'),
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo',
+                        border: OutlineInputBorder(),
+                      ),
                       items: TipoTarefa.values.map((TipoTarefa t) {
                         return DropdownMenuItem(value: t, child: Text(t.label));
                       }).toList(),
@@ -340,16 +392,17 @@ class _TelaTarefaState extends State<TelaTarefa> {
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context);
-                    // Limpa controllers ao cancelar para não ficar lixo na próxima vez
                     _tituloController.clear();
                     _descricaoController.clear();
                     _prazoController.clear();
                   },
-                  child: const Text('Cancelar'),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // Chama a função passando o ID se for edição, ou null se for criação
                     _salvarOuAtualizarTarefa(
                       id: tarefaParaEditar != null
                           ? tarefaParaEditar['idTarefa']
