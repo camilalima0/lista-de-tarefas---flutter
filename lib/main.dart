@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'database_helper.dart';
 
-// --- ENUMS (Mantidos igual) ---
+// ENUMS
 enum Prioridade {
   baixa,
   media,
@@ -18,13 +18,12 @@ enum Prioridade {
     }
   }
 
-  // Ajustei as cores para combinar melhor com o tema laranja
   Color get color {
     switch (this) {
       case Prioridade.baixa:
         return Colors.green;
       case Prioridade.media:
-        return Colors.amber; // Amber combina mais com Laranja
+        return Colors.amber;
       case Prioridade.alta:
         return Colors.redAccent;
     }
@@ -48,38 +47,29 @@ enum TipoTarefa {
   }
 }
 
-// --- DEFINIÇÃO DO TEMA ENERGÉTICO ---
 final ThemeData temaEnergetico = ThemeData(
   useMaterial3: true,
-  // Define a base de cores
   colorScheme: ColorScheme.fromSeed(
-    seedColor: Colors.orange, // Cor Primária base
+    seedColor: Colors.orange,
     primary: Colors.orange,
-    secondary: Colors.deepOrange, // Cor Secundária (Botões de ação, destaque)
+    secondary: Colors.deepOrange,
     brightness: Brightness.light,
   ),
 
-  // Customiza a barra superior
   appBarTheme: const AppBarTheme(
     backgroundColor: Colors.orange,
-    foregroundColor: Colors.white, // Cor do texto/ícones na barra
+    foregroundColor: Colors.white,
     centerTitle: true,
-    elevation: 4, // Sombra leve
+    elevation: 4,
   ),
 
-  // Customiza o botão flutuante (+)
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
     backgroundColor: Colors.deepOrange,
     foregroundColor: Colors.white,
   ),
 
-  // Customiza os Cards da lista
-  cardTheme: CardThemeData(
-    color: Colors.orange[50], // Um laranja bem clarinho no fundo do card
-    elevation: 2,
-  ),
+  cardTheme: CardThemeData(color: Colors.orange[50], elevation: 2),
 
-  // Customiza os botões de Salvar/Atualizar
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       backgroundColor: Colors.deepOrange,
@@ -101,10 +91,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Lista de Tarefas',
-
-      // AQUI APLICAMOS O SEU TEMA NOVO:
       theme: temaEnergetico,
-
       home: const TelaTarefa(),
     );
   }
@@ -133,7 +120,7 @@ class _TelaTarefaState extends State<TelaTarefa> {
     _atualizarListaTarefas();
   }
 
-  // --- BANCO DE DADOS ---
+  //BANCO DE DADOS
   void _atualizarListaTarefas() async {
     final dbHelper = DatabaseHelper();
     final dados = await dbHelper.queryAllRows();
@@ -188,14 +175,11 @@ class _TelaTarefaState extends State<TelaTarefa> {
     }
   }
 
-  // --- TELA ---
+  //TELA
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Minhas Tarefas'),
-        // Removi o backgroundColor hardcoded daqui para ele pegar do tema
-      ),
+      appBar: AppBar(title: const Text('Minhas Tarefas')),
       body: _listaTarefas.isEmpty
           ? Center(
               child: Column(
@@ -233,7 +217,6 @@ class _TelaTarefaState extends State<TelaTarefa> {
                 }
 
                 return Card(
-                  // O Card agora pega a cor laranja clarinho do tema automaticamente
                   child: ListTile(
                     onTap: () =>
                         _mostrarFormulario(context, tarefaParaEditar: item),

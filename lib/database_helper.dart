@@ -20,6 +20,7 @@ class DatabaseHelper {
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = join(documentsDirectory.path, '_202310268.db');
+    print('📂 CAMINHO DO BANCO DE DADOS: $path');
 
     return await openDatabase(path, version: 1, onCreate: _onCreate);
   }
